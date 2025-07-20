@@ -14,10 +14,10 @@ int main() {
         .sin_family = AF_INET,
         .sin_port   = htons(18515)
     };
-    inet_pton(AF_INET, "192.168.56.101", &addr.sin_addr);
+    inet_pton(AF_INET, "192.168.56.103", &addr.sin_addr);
     rdma_bind_addr(listen_id, (struct sockaddr *)&addr);
     rdma_listen(listen_id, 1);
-    printf("Server listening on %s:%d\n", "192.168.56.101", 18515);
+    printf("Server listening on %s:%d\n", "192.168.56.103", 18515);
 
     // Wait for a connection request
     struct rdma_cm_event *event;
