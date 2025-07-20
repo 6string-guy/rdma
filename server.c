@@ -3,11 +3,15 @@
 #include <string.h>
 #include <infiniband/verbs.h>
 #include <rdma/rdma_cma.h>
+#include "header.h"
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 
 int main()
 {
     // sare device le aao
-    struct ibvdevice **device_list;
+    struct ibv_device **device_list;
     ibv_get_device_list(device_list);
     // device free kar lo if occupied
     ibv_free_device_list(device_list);
