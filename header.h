@@ -1,22 +1,25 @@
-#include<infiniband/verbs.h>
-#include<stdio.h>
-#include<stdlib.h>
+// rdma_calc.h
+#ifndef RDMA_CALC_H
+#define RDMA_CALC_H
 
-#define CQ_CAPACITY (20)
-#define MAX_SGE (5)
-#define MAX_WR (15)
-#define DEFAULT_RDMA_PORT (20886)
+#include <infiniband/verbs.h>
+#include <rdma/rdma_cma.h>
+#include <stdint.h>
 
-
-struct rdma_buffer_attr
-{
-    uint64_t address;
-    uint32_t length;
-    union stag {
-        uint32_t local_stag;
-        uint32_t remote_stag;
-    } stag;
-    
+// Request: two operands and an opcode (0=add,1=sub,2=mul,3=div)
+struct calc_req {
+    uint32_t a;
+    uint32_t b;
+    uint32_t op;
 };
 
+// Response: single 32-bit result
+struct calc_resp {
+    uint32_t result;
+};
 
+// Buffer size large enough for both request and response
+#define BUF_SIZE (sizeof(struct calc_req) > sizeof(struct calc_resp) ? \
+                  sizeof(struct calc_req) : sizeof(struct calc_resp))
+
+#endif // RDMA_CALC_H
