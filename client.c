@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
       .sin_family = AF_INET,
       .sin_port   = htons(18515)
     };
-    inet_pton(AF_INET, "192.168.56.101", &server_addr.sin_addr);
+    inet_pton(AF_INET, "192.168.56.103", &server_addr.sin_addr);
     rdma_resolve_addr(cm_id, NULL,
                       (struct sockaddr *)&server_addr, 2000);
     struct rdma_cm_event *event;
