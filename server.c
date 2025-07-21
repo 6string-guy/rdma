@@ -30,7 +30,7 @@ int main(void)
 
     while (1) {
         struct rdma_cm_event *ev;
-        rdma_get_cm_event(ec, &ev); // BLOCKS until client connects
+        rdma_get_cm_event(ec, &ev);
         struct rdma_cm_id *id = ev->id;
         rdma_ack_cm_event(ev);
 
@@ -50,13 +50,12 @@ int main(void)
 
         struct rdma_conn_param cp = {0};
         rdma_accept(id, &cp);
-        rdma_get_cm_event(ec, &ev); rdma_ack_cm_event(ev);
+        rdma_get_cm_event(ec, &ev);
+        rdma_ack_cm_event(ev);
         printf("Client connected\n");
 
-        // --- Process multiple requests from this client
         int running = 1;
         while (running) {
-            // Post receive
             struct ibv_sge sge = { .addr=(uintptr_t)buf, .length=sizeof(struct calc_req), .lkey=mr->lkey };
             struct ibv_recv_wr rwr = { .wr_id=1, .sg_list=&sge, .num_sge=1 };
             struct ibv_recv_wr *bad;
@@ -66,18 +65,17 @@ int main(void)
             if (poll_one(cq, IBV_WC_RECV, &wc)) { fprintf(stderr,"recv wc error\n"); break; }
 
             struct calc_req *req = buf;
-            uint32_t A = ntohl(req->a), B = ntohl(req->b), op = ntohl(req->op);
-            // A special case: detect shutdown (client sends op==0xFFFFFFFF)
-            if(op == 0xFFFFFFFF) {
+            int32_t A = ntohl(req->a), B = ntohl(req->b), op = ntohl(req->op);
+            if(op == 0x7FFFFFFF) { // special exit command for signed int
                 printf("Client requested disconnect. Closing connection.\n");
                 running = 0;
                 continue;
             }
 
-            uint32_t res = 0;
+            int32_t res = 0;
             switch (op) { case 0: res=A+B; break; case 1: res=A-B; break;
-                          case 2: res=A*B; break; case 3: res=B?A/B:0; break; }
-            printf("Computed: %u %s %u = %u\n",A,op==0?"+":op==1?"-":op==2?"*":"/",B,res);
+                          case 2: res=A*B; break; case 3: res=(B?A/B:0); break; }
+            printf("Computed: %d %s %d = %d\n", A, op==0?"+":op==1?"-":op==2?"*":"/", B, res);
 
             *((struct calc_resp *)buf) = (struct calc_resp){ htonl(res) };
             sge.length = sizeof(struct calc_resp);
@@ -87,7 +85,6 @@ int main(void)
             if (poll_one(cq, IBV_WC_SEND, &wc)) { fprintf(stderr,"send wc error\n"); break; }
         }
 
-        // Cleanup this client's resources
         rdma_disconnect(id);
         ibv_dereg_mr(mr); free(buf);
         rdma_destroy_qp(id); ibv_destroy_cq(cq); ibv_dealloc_pd(pd);

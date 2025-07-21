@@ -18,7 +18,6 @@ static int poll_one(struct ibv_cq *cq, enum ibv_wc_opcode expect, struct ibv_wc 
 }
 
 int main() {
-    // Connect
     struct rdma_event_channel *ec = rdma_create_event_channel();
     struct rdma_cm_id *id;
     rdma_create_id(ec, &id, NULL, RDMA_PS_TCP);
@@ -56,8 +55,7 @@ int main() {
         if (!fgets(input, sizeof input, stdin)) break;
 
         if (strncmp(input, "exit", 4) == 0) {
-            // Send special shutdown request to server
-            struct calc_req req = {0,0,htonl(0xFFFFFFFF)};
+            struct calc_req req = {0,0,htonl(0x7FFFFFFF)};
             struct ibv_sge sge = { .addr=(uintptr_t)buf, .length=sizeof(req), .lkey=mr->lkey };
             memcpy(buf,&req,sizeof(req));
             struct ibv_send_wr swr = { .wr_id=1, .sg_list=&sge, .num_sge=1, .opcode=IBV_WR_SEND, .send_flags=IBV_SEND_SIGNALED };
@@ -68,12 +66,11 @@ int main() {
             break;
         }
 
-        unsigned int A,B,op;
-        if (sscanf(input, "%u %u %u", &A, &B, &op) != 3 || op>3) {
+        int32_t A,B,op;
+        if (sscanf(input, "%d %d %d", &A, &B, &op) != 3 || op<0 || op>3) {
             printf("Bad input, try again.\n");
             continue;
         }
-        // Post receive before sending request
         struct ibv_sge sge_resp = { .addr=(uintptr_t)buf, .length=sizeof(struct calc_resp), .lkey=mr->lkey };
         struct ibv_recv_wr rwr={ .wr_id=2,.sg_list=&sge_resp,.num_sge=1 },*bad;
         ibv_post_recv(id->qp,&rwr,&bad);
@@ -87,8 +84,8 @@ int main() {
         struct ibv_wc wc;
         if (poll_one(cq,IBV_WC_SEND,&wc)) { printf("send wc error\n"); break; }
         if (poll_one(cq,IBV_WC_RECV,&wc)) { printf("recv wc error\n"); break; }
-        uint32_t res = ntohl(((struct calc_resp*)buf)->result);
-        printf("Result: %u\n",res);
+        int32_t res = ntohl(((struct calc_resp*)buf)->result);
+        printf("Result: %d\n",res);
     }
 
     rdma_disconnect(id);
