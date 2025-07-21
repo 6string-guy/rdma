@@ -1,25 +1,14 @@
-// rdma_calc.h
-#ifndef RDMA_CALC_H
-#define RDMA_CALC_H
+#ifndef RDMA_CALC_DEFS
+#define RDMA_CALC_DEFS
 
 #include <infiniband/verbs.h>
 #include <rdma/rdma_cma.h>
 #include <stdint.h>
 
-// Request: two operands and an opcode (0=add,1=sub,2=mul,3=div)
-struct calc_req {
-    uint32_t a;
-    uint32_t b;
-    uint32_t op;
-};
+/* operation: 0 = add, 1 = sub, 2 = mul, 3 = div */
+struct calc_req  { uint32_t a, b, op; };
+struct calc_resp { uint32_t result;   };
 
-// Response: single 32-bit result
-struct calc_resp {
-    uint32_t result;
-};
+#define BUF_SIZE 64   /* ≥ max(sizeof(req), sizeof(resp)) */
 
-// Buffer size large enough for both request and response
-#define BUF_SIZE (sizeof(struct calc_req) > sizeof(struct calc_resp) ? \
-                  sizeof(struct calc_req) : sizeof(struct calc_resp))
-
-#endif // RDMA_CALC_H
+#endif
