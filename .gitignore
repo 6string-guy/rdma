@@ -2,7 +2,15 @@
 .server
 .client
 .rdma_client
+# Object files:
+*.o
+*.obj
 
+# Executables:
+*.exe
+*.out
+*.app
+a.out
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
