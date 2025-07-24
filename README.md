@@ -13,10 +13,10 @@ gcc -Wall  -O2 -pthread server.c  -lrdmacm -libverbs -o server
 gcc -Wall -O2         client.c  -lrdmacm -libverbs -o client 
 ```
 
-## Server 
+## Starting server and client 
 ```bash
-./server -i <your ip> -p <port no.>
-./client -i <your server ip> -p <port no.>
+sudo ./server -i <your ip> -p <port no.>
+sudo ./client -i <your server ip> -p <port no.>
 ```
 
 
